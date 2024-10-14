@@ -6,7 +6,5 @@ class MyAppConfig(AppConfig):
     name = 'tickets'
 
     def ready(self):
-        # Agenda a atualização dos tickets a cada 60 segundos
-        scheduler = BackgroundScheduler()
-        scheduler.add_job(update_tickets, 'interval', seconds=60)
-        scheduler.start()
+        from .api import initialize_scheduler  # Importação tardia
+        initialize_scheduler()

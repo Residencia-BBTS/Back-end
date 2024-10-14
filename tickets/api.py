@@ -1,11 +1,12 @@
-from ninja import NinjaAPI
+from ninja import Router
 import requests
 from requests.auth import HTTPBasicAuth
 import os
 from dotenv import load_dotenv
 from apscheduler.schedulers.background import BackgroundScheduler
 
-api = NinjaAPI() # inicializando a api
+
+router = Router() # inicializando a api
 
 tickets_cache = [] # criando uma lista de cache
 
@@ -21,12 +22,12 @@ def fetch_service_now():
     # autenticação de acesso no service now
     user_acess = os.getenv("USER_ACESS")
     password = os.getenv("PASSWORD")
-    url = "https://dev282633.service-now.com/api/now/table/incident"
+    url = "https://dev266278.service-now.com/api/now/table/incident"
     
     response = requests.get(url, auth=HTTPBasicAuth(user_acess, password), params=query_params)
     tickets = response.json().get('result', []) # coleto a resposta da api do service now e atribuo a uma variavel no formato json
 
-    base_url = "https://dev282633.service-now.com/nav_to.do?uri=incident.do?sysparm_query=number=" # base de url pra acessar o link do ticket em especifico
+    base_url = "https://dev266278.service-now.com/nav_to.do?uri=incident.do?sysparm_query=number=" # base de url pra acessar o link do ticket em especifico
     
     # Filtra e prepara os dados dos tickets
     filtered_tickets = [
@@ -49,13 +50,14 @@ def update_tickets():
     fetch_tickets()
     print("Tickets atualizados com sucesso.")
 
-scheduler = BackgroundScheduler()
-scheduler.add_job(update_tickets, 'interval', seconds=60)
-scheduler.start()
+def initialize_scheduler():
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(update_tickets, 'interval', seconds=60)
+    scheduler.start()
 
 update_tickets()
 
 # rota da api 
-@api.get("/tickets")
+@router.get("/")
 def get_tickets(request):
-    return tickets_cache 
+    return tickets_cache    
