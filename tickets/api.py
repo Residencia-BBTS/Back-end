@@ -1,63 +1,93 @@
 from ninja import Router
-import requests
-from requests.auth import HTTPBasicAuth
+import uuid
+import random
+import json
+from datetime import datetime, timedelta
 import os
-from dotenv import load_dotenv
-from apscheduler.schedulers.background import BackgroundScheduler
 
+router = Router()
+incidents = []
 
-router = Router() # inicializando a api
+def random_uuid():
+    return str(uuid.uuid4())
 
-tickets_cache = [] # criando uma lista de cache
+def random_date():
+    now = datetime.utcnow()
+    random_past_time = now - timedelta(days=random.randint(1, 30), hours=random.randint(0, 23), minutes=random.randint(0, 59))
+    return random_past_time.isoformat() + "Z"
 
-load_dotenv() # carregando as credenciais do .env
-
-def fetch_service_now(): 
-    query_params = {
-        'sysparm_query': 'state!=7^state!=8^state!=9',  
-        'sysparm_sortby': 'sys_created_on',  
-        'sysparm_orderby': 'DESC'  
-    } # parametros de pesquisa
-    
-    # autenticação de acesso no service now
-    user_acess = os.getenv("USER_ACESS")
-    password = os.getenv("PASSWORD")
-    url = "https://dev266278.service-now.com/api/now/table/incident"
-    
-    response = requests.get(url, auth=HTTPBasicAuth(user_acess, password), params=query_params)
-    tickets = response.json().get('result', []) # coleto a resposta da api do service now e atribuo a uma variavel no formato json
-
-    base_url = "https://dev266278.service-now.com/nav_to.do?uri=incident.do?sysparm_query=number=" # base de url pra acessar o link do ticket em especifico
-    
-    # Filtra e prepara os dados dos tickets
-    filtered_tickets = [
-        {
-            **{key: ticket[key] for key in ["number", "sys_id", "short_description", "priority", "category", "sys_updated_by", "sys_updated_on", "sys_created_on"]},
-            'link': f"{base_url}{ticket['number']}"  
+def generate_random_incident(incident_number):
+    incident = {
+        "eventUniqueId": random_uuid(),
+        "objectSchemaType": "Incident",
+        "objectEventType": "Create",
+        "workspaceInfo": {
+            "SubscriptionId": "556ac391-e8b4-4a9e-8f05-024974300f27",
+            "ResourceGroupName": "rg-siem",
+            "WorkspaceName": "sentinelhml"
+        },
+        "workspaceId": "8d300aff-d535-4430-9eef-3046965c48cf",
+        "object": {
+            "id": f"/subscriptions/556ac391-e8b4-4a9e-8f05-024974300f27/resourceGroups/rg-siem/providers/Microsoft.OperationalInsights/workspaces/sentinelhml/providers/Microsoft.SecurityInsights/Incidents/{random_uuid()}",
+            "name": random_uuid(),
+            "etag": f"\"{random_uuid()}\"",
+            "type": "Microsoft.SecurityInsights/Incidents",
+            "properties": {
+                "title": f"Incidente Teste - {random.choice(["Porto Digital", "BBTS", "Banco do Brasil"])}",
+                "description": f"{random.choice(["Sistema caiu", "Erro de conexão", "Falha no login"])}",
+                "severity": f"{random.choice(["High", "Medium", "Low"])}",
+                "status": f"{random.choice(["New", "In Progress", "Resolved"])}",
+                "owner": {
+                    "objectId": random_uuid(),
+                    "email": "ext-teste@bbts.com.br",
+                    "assignedTo": f"{random.choice(["Lohhan Guilherme", "Arthur Coelho", "Lucas Kauã"])}",
+                    "userPrincipalName": "ext-teste@bbts.com.br",
+                },
+                "labels": [],
+                "firstActivityTimeUtc": random_date(),
+                "lastActivityTimeUtc": random_date(),
+                "lastModifiedTimeUtc": random_date(),
+                "createdTimeUtc": random_date(),
+                "incidentNumber": str(incident_number),
+                "additionalData": {
+                    "alertsCount": 0,
+                    "bookmarksCount": 0,
+                    "commentsCount": 0,
+                    "alertProductNames": [],
+                    "tactics": [],
+                    "techniques": []
+                },
+                "relatedAnalyticRuleIds": [],
+                "incidentUrl": "https://portal.azure.com/#asset/Microsoft_Azure_Security_Insights/Incident/subscriptions/556ac391-e8b4-4a9e-8f05-024974300f27/resourceGroups/rg-siem/providers/Microsoft.OperationalInsights/workspaces/sentinelhml/providers/Microsoft.SecurityInsights/Incidents/22d80f17-3e6d-49a7-8cc4-ad88fc708c95",
+                "providerName": "Azure Sentinel",
+                "providerIncidentId": str(incident_number),
+                "alerts": [],
+                "bookmarks": [],
+                "relatedEntities": [],
+                "comments": []
+            }
         }
-        for ticket in tickets
-    ]
+    }
+    return incident
 
-    return filtered_tickets
+def generate_incidents(n):
+    for i in range(1,n+1):
+        incidents.append(generate_random_incident(i))
+    return incidents
 
-def fetch_tickets(): 
-    global tickets_cache
-    tickets_cache = [] 
-    tickets_cache += fetch_service_now()
+def save(incidents):
+    filename = "incidents.json"
+    with open (filename, "w") as file:
+        json.dump(incidents, file)
 
-# atualiza os tickets a cada 60s
-def update_tickets(): 
-    fetch_tickets()
-    print("Tickets atualizados com sucesso.")
+save(generate_incidents(10))
+my_incidents_path = os.path.join("..", "incidents.json")
+        
+@router.get("/")     
+def all_tickets(request):
+    current_dir = os.path.dirname(os.path.abspath(__file__))  # Diretório atual do arquivo
+    incidents_path = os.path.join(current_dir, "../incidents.json")  # Caminho completo
 
-def initialize_scheduler():
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(update_tickets, 'interval', seconds=60)
-    scheduler.start()
-
-update_tickets()
-
-# rota da api 
-@router.get("/")
-def get_tickets(request):
-    return tickets_cache    
+    with open(incidents_path, "r") as file:
+        all_incidents = json.load(file)
+        return all_incidents
