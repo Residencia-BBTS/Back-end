@@ -81,7 +81,6 @@ def save(incidents):
         json.dump(incidents, file)
 
 save(generate_incidents(10))
-my_incidents_path = os.path.join("..", "incidents.json")
         
 @router.get("/")     
 def all_tickets(request):
