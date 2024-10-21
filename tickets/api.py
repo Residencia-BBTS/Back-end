@@ -4,18 +4,22 @@ import random
 import json
 from datetime import datetime, timedelta
 import os
+from apscheduler.schedulers.background import BackgroundScheduler
 
 router = Router()
 incidents = []
 
+# função de gerar uuid
 def random_uuid():
     return str(uuid.uuid4())
 
+# função de gerar uma data aleatória
 def random_date():
     now = datetime.utcnow()
     random_past_time = now - timedelta(days=random.randint(1, 30), hours=random.randint(0, 23), minutes=random.randint(0, 59))
     return random_past_time.isoformat() + "Z"
 
+# função de gerar um incidente aleatório
 def generate_random_incident(incident_number):
     incident = {
         "eventUniqueId": random_uuid(),
@@ -70,18 +74,29 @@ def generate_random_incident(incident_number):
     }
     return incident
 
+# função de adicionar os incidentes aleatórios à uma lista
 def generate_incidents(n):
     for i in range(1,n+1):
         incidents.append(generate_random_incident(i))
     return incidents
 
+# função de salvar os incidentes em um file incidents.json
 def save(incidents):
     filename = "incidents.json"
     with open (filename, "w") as file:
         json.dump(incidents, file)
 
 save(generate_incidents(10))
-        
+
+def update_incidents():
+    incidents.append(generate_random_incident(99))
+    save(incidents)
+
+def initialize_scheduler():
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(update_incidents, 'interval', seconds=10)
+    scheduler.start()
+
 @router.get("/")     
 def all_tickets(request):
     current_dir = os.path.dirname(os.path.abspath(__file__))  # Diretório atual do arquivo
