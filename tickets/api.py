@@ -1,13 +1,13 @@
 from ninja import Router
 import uuid
 import random
-import json
 from datetime import datetime, timedelta
-import os
 from apscheduler.schedulers.background import BackgroundScheduler
+from .models import Tickets
+from .schema import TicketSchema
 
 router = Router()
-incidents = []
+incidents_cache = []
 
 # função de gerar uuid
 def random_uuid():
@@ -21,7 +21,8 @@ def random_date():
 
 # função de gerar um incidente aleatório
 def generate_random_incident(incident_number):
-    incident = {
+    incident = {}
+    incident["object"] = {
         "eventUniqueId": random_uuid(),
         "objectSchemaType": "Incident",
         "objectEventType": "Create",
@@ -77,31 +78,70 @@ def generate_random_incident(incident_number):
 # função de adicionar os incidentes aleatórios à uma lista
 def generate_incidents(n):
     for i in range(1,n+1):
-        incidents.append(generate_random_incident(i))
-    return incidents
+        incidents_cache.append(generate_random_incident(i))
+    return incidents_cache
 
-# função de salvar os incidentes em um file incidents.json
 def save(incidents):
-    filename = "incidents.json"
-    with open (filename, "w") as file:
-        json.dump(incidents, file)
+    for incident in incidents:
+        uuid = incident["object"]["object"]["name"]  
+        created_time = datetime.fromisoformat(incident["object"]["object"]["properties"]["firstActivityTimeUtc"][:-1]).date()
+        last_modified_time = datetime.fromisoformat(incident["object"]["object"]["properties"]["lastModifiedTimeUtc"][:-1]).date()
 
-save(generate_incidents(10))
+        # tentando atualizar ou criar um novo ticket
+        ticket, created = Tickets.objects.get_or_create(
+            uuid=uuid,
+            defaults={
+                'createdTime': created_time,
+                'lastModifiedTime': last_modified_time,
+                'status': incident["object"]["object"]["properties"].get("status", "Unknown"),
+                'severity': incident["object"]["object"]["properties"].get("severity", "Low"),
+                'assignedTo': incident["object"]["object"]["properties"]["owner"].get("assignedTo", "Unassigned"),
+                'title': incident["object"]["object"]["properties"].get("title", "No Title"),
+                'description': incident["object"]["object"]["properties"].get("description", "No Description"),
+            }
+        )
+
+        if not created:
+            ticket.lastModifiedTime = last_modified_time
+            ticket.status = incident["object"]["object"]["properties"].get("status", ticket.status)
+            ticket.severity = incident["object"]["object"]["properties"].get("severity", ticket.severity)
+            ticket.assignedTo = incident["object"]["object"]["properties"]["owner"].get("assignedTo", ticket.assignedTo)
+            ticket.title = incident["object"]["object"]["properties"].get("title", ticket.title)
+            ticket.description = incident["object"]["object"]["properties"].get("description", ticket.description)
+            ticket.save()  
+
+save(generate_incidents(4))
 
 def update_incidents():
-    incidents.append(generate_random_incident(99))
-    save(incidents)
+    incidents_cache.append(generate_random_incident(random.randint(2, 9999)))
+    save(incidents_cache)
 
 def initialize_scheduler():
     scheduler = BackgroundScheduler()
-    scheduler.add_job(update_incidents, 'interval', seconds=10)
+    scheduler.add_job(update_incidents, 'interval', seconds=600)
     scheduler.start()
 
-@router.get("/")     
-def all_tickets(request):
-    current_dir = os.path.dirname(os.path.abspath(__file__))  # Diretório atual do arquivo
-    incidents_path = os.path.join(current_dir, "../incidents.json")  # Caminho completo
+@router.get("/", response=list[TicketSchema])     
+def get_tickets(request, order: str="recent", status: str=None, severity: str=None):
+    tickets = Tickets.objects.all()
 
-    with open(incidents_path, "r") as file:
-        all_incidents = json.load(file)
-        return all_incidents
+    if order == "recent":
+        tickets = tickets.order_by("-createdTime")
+    elif order == "oldest":
+        tickets = tickets.order_by("createdTime")
+
+    if status == "New":
+        tickets = tickets.filter(status="New")
+    elif status == "In Progress":
+        tickets = tickets.filter(status="In Progress")
+    elif status == "Resolved":
+        tickets = tickets.filter(status="Resolved")
+
+    if severity == "High":
+        tickets = tickets.filter(severity="High")
+    elif severity == "Medium":
+        tickets = tickets.filter(severity="Medium")
+    elif severity == "Low":
+        tickets = tickets.filter(severity="Low")
+
+    return tickets
