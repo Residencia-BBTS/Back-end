@@ -10,13 +10,13 @@ class Tickets(models.Model):
       unique=True
    )
 
-   createdTime = models.DateField(
+   createdTime = models.DateTimeField(
       verbose_name="Data de Criação",
       null=False,  
       blank=False
    )
 
-   lastModifiedTime = models.DateField(
+   lastModifiedTime = models.DateTimeField(
       verbose_name="Última Modificação",
       null=False,
       blank=False
@@ -47,9 +47,23 @@ class Tickets(models.Model):
    )
 
    description = models.CharField(
-      max_length=255,  
+      max_length=300,  
       verbose_name="Descrição",
       help_text="Descrição detalhada do ticket."
+   )
+
+   incidentURL = models.CharField(
+      max_length = 300,
+      verbose_name="Link URL do Incidente",
+      help_text="URL que direciona ao serviço.",
+      default=""
+   )
+
+   providerName = models.CharField(
+      max_length=80,
+      verbose_name="Nome do Serviço",
+      help_text="Serviço do Incidente.",
+      default=""
    )
 
    def __str__(self):
