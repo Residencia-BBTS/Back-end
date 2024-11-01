@@ -1,12 +1,13 @@
 from ninja import Router
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from .models import Tickets
-from .schema import TicketSchema
+from .schema import TicketSchema, DashboardResponse
+from django.db.models import Count
 
 router = Router()
 
 @router.get("/", response=list[TicketSchema])
-def get_tickets(request, order: str = "recent", status: str = None, severity: str = None):
+def get_tickets(request, order: str = "recent", status: str = None, severity: str = None, providerName: str = None):
     tickets = Tickets.objects.all()
 
     if order == "recent":
@@ -19,6 +20,9 @@ def get_tickets(request, order: str = "recent", status: str = None, severity: st
 
     if severity:
         tickets = tickets.filter(severity=severity)
+
+    if providerName:
+        tickets = tickets.filter(providerName=providerName)
 
     return tickets
 
@@ -71,3 +75,26 @@ def new_incidents(request, tickets: list[dict]):
             print(f"Erro ao processar o ticket {ticket_schema.uuid}: {e}")
 
     return {"message": "Tickets processed successfully"}
+
+
+@router.get("/dashboard", response=DashboardResponse)
+def get_dashboard(request, days: int=7):
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=days)
+
+    ticket_counts = (
+        Tickets.objects.filter(createdTime__range=(start_date, end_date)).values("status").annotate(count=Count("uuid"))
+    )
+    total_count = Tickets.objects.filter(createdTime__range=(start_date, end_date)).count()
+
+    new_count = in_progress_count = resolved_count = 0
+
+    for ticket in ticket_counts:
+        if ticket["status"] == "New":
+            new_count = ticket["count"]
+        elif ticket["status"] == "In Progress":
+            in_progress_count = ticket["count"]
+        elif ticket["status"] == "Resolved":
+            resolved_count = ticket["count"]
+        
+    return {"new": new_count, "in_progress": in_progress_count, "resolved": resolved_count, "total": total_count}
