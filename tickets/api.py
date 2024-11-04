@@ -78,7 +78,7 @@ def new_incidents(request, tickets: list[dict]):
 
 
 @router.get("/dashboard", response=DashboardResponse)
-def get_dashboard(request, days: int=7):
+def get_dashboard(request, days: int=7):    
     end_date = datetime.now()
     start_date = end_date - timedelta(days=days)
 
