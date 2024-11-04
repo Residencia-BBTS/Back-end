@@ -7,8 +7,13 @@ from django.db.models import Count
 router = Router()
 
 @router.get("/", response=list[TicketSchema])
-def get_tickets(request, order: str = "recent", status: str = None, severity: str = None, providerName: str = None):
+def get_tickets(request, order: str = "recent", status: str = None, severity: str = None, providerName: str = None, days: int = None):    
     tickets = Tickets.objects.all()
+
+    if days:
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=days)
+        tickets = tickets.filter(createdTime__range=(start_date, end_date))
 
     if order == "recent":
         tickets = tickets.order_by("-createdTime")
