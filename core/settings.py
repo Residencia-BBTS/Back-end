@@ -1,9 +1,10 @@
 from pathlib import Path
 import os
+from datetime import timedelta
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -27,7 +28,9 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "tickets",
     "channels",
-    "corsheaders"
+    "corsheaders",
+    "users",
+    "ninja_simple_jwt"
 ]
 
 MIDDLEWARE = [
@@ -118,4 +121,21 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
+
+MICROSOFT_AUTH = {
+    'client_id': '2d552aa0-1b3f-4f46-8284-d2afb97948fb',
+    'client_secret': 'OzC8Q~zo6WPWHyUrfwB99nmqbEGhdn9Y2hqnKbJ2',
+    'tenant_id': 'ffc0be44-315f-4479-b12f-56afe6ededd6',
+    'authorize_url': f'https://login.microsoftonline.com/ffc0be44-315f-4479-b12f-56afe6ededd6/oauth2/v2.0/authorize',
+    'token_url': f'https://login.microsoftonline.com/ffc0be44-315f-4479-b12f-56afe6ededd6/oauth2/v2.0/token',
+    'userinfo_url': 'https://graph.microsoft.com/v1.0/me'
+}
+
 
