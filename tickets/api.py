@@ -1,12 +1,12 @@
 from ninja import Router
 from datetime import datetime, timedelta, timezone
 from .models import Tickets
-from .schema import TicketSchema, DashboardResponse
-from django.db.models import Count
+from .schema import TicketSchema
+from core.auth import azure_bearer
 
 router = Router()
 
-@router.get("/", response=list[TicketSchema])
+@router.get("/", response=list[TicketSchema], auth=azure_bearer)
 def get_tickets(request, order: str = "recent", status: str = None, severity: str = None, providerName: str = None, days: int = None):    
     tickets = Tickets.objects.all()
 
@@ -31,7 +31,7 @@ def get_tickets(request, order: str = "recent", status: str = None, severity: st
 
     return tickets
 
-@router.post("/new_incidents")
+@router.post("/new_incidents", auth=azure_bearer)
 def new_incidents(request, tickets: list[dict]):
     for ticket in tickets:
         try:

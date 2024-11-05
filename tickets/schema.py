@@ -14,8 +14,3 @@ class TicketSchema(Schema):
     incidentURL: str
     providerName: str
 
-class DashboardResponse(Schema):
-    new: int
-    in_progress: int
-    resolved: int
-    total: int
