@@ -5,8 +5,8 @@ from .schema import TicketSchema
 from core.auth import azure_bearer
 
 router = Router()
-
-@router.get("/", response=list[TicketSchema], auth=azure_bearer)
+#auth=azure_bearer
+@router.get("/", response=list[TicketSchema])
 def get_tickets(request, order: str = "recent", status: str = None, severity: str = None, providerName: str = None, days: int = None):    
     tickets = Tickets.objects.all()
 
@@ -31,7 +31,7 @@ def get_tickets(request, order: str = "recent", status: str = None, severity: st
 
     return tickets
 
-@router.post("/new_incidents", auth=azure_bearer)
+@router.post("/new_incidents")
 def new_incidents(request, tickets: list[dict]):
     for ticket in tickets:
         try:
