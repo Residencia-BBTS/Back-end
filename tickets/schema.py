@@ -9,6 +9,7 @@ class TicketSchema(Schema):
     status: str
     severity: str
     assignedTo: str
+    email: str
     title: str
     description: str
     incidentURL: str

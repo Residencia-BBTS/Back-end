@@ -40,6 +40,13 @@ class Tickets(models.Model):
       help_text="Nome da pessoa ou equipe responsável pelo ticket."
    )
 
+   email = models.CharField(
+      max_length=80,
+      verbose_name="Email",
+      help_text="Email do usuário",
+      null=True
+   )
+
    title = models.CharField(
       max_length=80,
       verbose_name="Título",

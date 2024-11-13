@@ -1,7 +1,8 @@
 from ninja import Router
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
-from .schema import SignInSchema, SignUpSchema
+from .schema import SignInSchema, SignUpSchema, AllUsers
+from tickets.models import Tickets
 
 router = Router()
 
@@ -25,3 +26,22 @@ def signup(request, user: SignUpSchema):
    user.save()
 
    return {"message": "User created sucessfully!"}
+
+
+@router.get("/all-users", response=list[AllUsers])
+def all_users(request):
+   users = User.objects.all()
+
+   user_data = []
+   for user in users:
+      tickets_atribuidos = Tickets.objects.filter(email=user.email).count()
+      tickets_fechados = Tickets.objects.filter(email=user.email, status="Resolved").count()
+
+      user_info = {
+         "username": user.username,
+         "email": user.email,
+         "tickets_atribuidos": tickets_atribuidos,
+         "tickets_fechados": tickets_fechados
+      }
+      user_data.append(user_info)
+   return user_data
