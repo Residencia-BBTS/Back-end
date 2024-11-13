@@ -29,7 +29,8 @@ INSTALLED_APPS = [
     "tickets",
     "channels",
     "corsheaders",
-    "ninja_simple_jwt"
+    "ninja_simple_jwt",
+    "users"
 ]
 
 MIDDLEWARE = [
