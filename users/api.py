@@ -20,7 +20,8 @@ def signin(request, payload: SignInSchema):
 def signup(request, user: SignUpSchema):
    user = User(
       username=user.username,
-      email=user.email
+      email=user.email,
+      is_staff = user.is_staff
    )
    user.set_password(user.password)
    user.save()

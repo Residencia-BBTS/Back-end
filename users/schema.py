@@ -4,6 +4,7 @@ class SignUpSchema(Schema):
    username: str
    password: str
    email: str
+   is_staff: bool
 
 class SignInSchema(Schema):
    email: str
