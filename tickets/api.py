@@ -1,11 +1,11 @@
 from ninja import Router
 from datetime import datetime, timedelta, timezone
 from .models import Tickets
-from .schema import TicketSchema, DashboardResponse
-from django.db.models import Count
+from .schema import TicketSchema
+from core.auth import azure_bearer
 
 router = Router()
-
+#auth=azure_bearer
 @router.get("/", response=list[TicketSchema])
 def get_tickets(request, order: str = "recent", status: str = None, severity: str = None, providerName: str = None, days: int = None):    
     tickets = Tickets.objects.all()
@@ -42,6 +42,7 @@ def new_incidents(request, tickets: list[dict]):
                 "status": ticket["object"]["properties"].get("status", "Unknown"),
                 "severity": ticket["object"]["properties"].get("severity", "Low"),
                 "assignedTo": ticket["object"]["properties"]["owner"].get("assignedTo", "Unassigned"),
+                "email": ticket["object"]["properties"]["owner"].get("email", "No email"),
                 "title": ticket["object"]["properties"].get("title", "No Title"),
                 "description": ticket["object"]["properties"].get("description", "No Description"),
                 "incidentURL": ticket["object"]["properties"].get("incidentUrl", "URL not Found"),
@@ -58,6 +59,7 @@ def new_incidents(request, tickets: list[dict]):
                     'status': ticket_schema.status,
                     'severity': ticket_schema.severity,
                     'assignedTo': ticket_schema.assignedTo,
+                    'email': ticket_schema.email,
                     'title': ticket_schema.title,
                     'description': ticket_schema.description,
                     'incidentURL': ticket_schema.incidentURL,
@@ -70,9 +72,10 @@ def new_incidents(request, tickets: list[dict]):
                 ticket_obj.status = ticket_schema.status
                 ticket_obj.severity = ticket_schema.severity
                 ticket_obj.assignedTo = ticket_schema.assignedTo
+                ticket_obj.email = ticket_schema.email
                 ticket_obj.title = ticket_schema.title
                 ticket_obj.description = ticket_schema.description
-                ticket_obj.save(update_fields=["lastModifiedTime", "status", "severity", "assignedTo", "title", "description", "incidentURL", "providerName"])
+                ticket_obj.save(update_fields=["lastModifiedTime", "status", "severity", "assignedTo", "email", "title", "description", "incidentURL", "providerName"])
 
             print("Objeto criado ou atualizado:", ticket_obj)
 

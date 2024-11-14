@@ -9,13 +9,9 @@ class TicketSchema(Schema):
     status: str
     severity: str
     assignedTo: str
+    email: str
     title: str
     description: str
     incidentURL: str
     providerName: str
 
-class DashboardResponse(Schema):
-    new: int
-    in_progress: int
-    resolved: int
-    total: int

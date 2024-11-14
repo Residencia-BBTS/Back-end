@@ -1,9 +1,10 @@
 from pathlib import Path
 import os
+from datetime import timedelta
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -27,7 +28,9 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "tickets",
     "channels",
-    "corsheaders"
+    "corsheaders",
+    "ninja_simple_jwt",
+    "users"
 ]
 
 MIDDLEWARE = [
@@ -69,12 +72,15 @@ ASGI_APPLICATION = "core.asgi.application"
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'BBTS_Tickets',
+        'USER': 'root',
+        'PASSWORD': 'Jlv@2504',
+        'HOST': 'localhost',
+        'PORT': '3306'
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -93,7 +99,6 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
@@ -119,3 +124,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+AZURE_AD_TENANT_ID = os.getenv("AZURE_AD_TENANT_ID", "ffc0be44-315f-4479-b12f-56afe6ededd6")
+AZURE_AD_CLIENT_ID = os.getenv("AZURE_AD_CLIENT_ID", "2d552aa0-1b3f-4f46-8284-d2afb97948fb")
+AZURE_AD_ISSUER = f"https://login.microsoftonline.com/{AZURE_AD_TENANT_ID}/v2.0"
+AZURE_AD_JWKS_URL = f"{AZURE_AD_ISSUER}/discovery/v2.0/keys"
