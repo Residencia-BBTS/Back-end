@@ -16,3 +16,4 @@ class AllUsers(Schema):
    tickets_atribuidos: int
    tickets_fechados: int
    is_staff: bool
+   avg_resolution_time: int
