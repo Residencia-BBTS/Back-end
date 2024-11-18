@@ -15,3 +15,4 @@ class AllUsers(Schema):
    email: str
    tickets_atribuidos: int
    tickets_fechados: int
+   is_staff: bool

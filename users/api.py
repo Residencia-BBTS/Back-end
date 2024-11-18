@@ -42,7 +42,8 @@ def all_users(request):
          "username": user.username,
          "email": user.email,
          "tickets_atribuidos": tickets_atribuidos,
-         "tickets_fechados": tickets_fechados
+         "tickets_fechados": tickets_fechados,
+         "is_staff": user.is_staff
       }
       user_data.append(user_info)
    return user_data
