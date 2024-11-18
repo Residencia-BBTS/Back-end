@@ -3,6 +3,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from .schema import SignInSchema, SignUpSchema, AllUsers
 from tickets.models import Tickets
+from datetime import timedelta
 
 router = Router()
 
@@ -37,13 +38,25 @@ def all_users(request):
    for user in users:
       tickets_atribuidos = Tickets.objects.filter(email=user.email).count()
       tickets_fechados = Tickets.objects.filter(email=user.email, status="Resolved").count()
+      resolved_tickets = Tickets.objects.filter(email=user.email, status="Resolved")
+      total_resolution_time = timedelta() 
+
+      for ticket in resolved_tickets:
+         if ticket.createdTime and ticket.lastModifiedTime:
+            resolution_time = ticket.lastModifiedTime - ticket.createdTime
+            total_resolution_time += resolution_time
+
+      avg_resolution_time = 0
+      if tickets_fechados > 0: 
+         avg_resolution_time = total_resolution_time.total_seconds()
 
       user_info = {
          "username": user.username,
          "email": user.email,
          "tickets_atribuidos": tickets_atribuidos,
          "tickets_fechados": tickets_fechados,
-         "is_staff": user.is_staff
+         "is_staff": user.is_staff,
+         "avg_resolution_time": avg_resolution_time
       }
       user_data.append(user_info)
    return user_data
