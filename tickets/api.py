@@ -7,7 +7,7 @@ from core.auth import azure_bearer
 router = Router()
 #auth=azure_bearer
 @router.get("/", response=list[TicketSchema])
-def get_tickets(request, order: str = "recent", status: str = None, severity: str = None, providerName: str = None, days: int = None):    
+def get_tickets(request, order: str = "recent", status: str = None, severity: str = None, providerName: str = None, start_date: str = None, end_date: str = None,):    
     tickets = Tickets.objects.all()
 
     if order == "recent":
@@ -24,10 +24,12 @@ def get_tickets(request, order: str = "recent", status: str = None, severity: st
     if providerName:
         tickets = tickets.filter(providerName=providerName)
 
-    if days:
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=days)
+    if start_date and end_date:
+        start_date_obj = datetime.fromisoformat(start_date)
+        end_date_obj = datetime.fromisoformat(end_date)
         tickets = tickets.filter(createdTime__range=(start_date, end_date))
+
+    print(f"start_date: {start_date}, end_date: {end_date}")
 
     return tickets
 
