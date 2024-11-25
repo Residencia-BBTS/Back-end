@@ -1,6 +1,9 @@
 from pathlib import Path
 import os
 from datetime import timedelta
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -120,7 +123,16 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-AZURE_AD_TENANT_ID = os.getenv("AZURE_AD_TENANT_ID", "ffc0be44-315f-4479-b12f-56afe6ededd6")
-AZURE_AD_CLIENT_ID = os.getenv("AZURE_AD_CLIENT_ID", "2d552aa0-1b3f-4f46-8284-d2afb97948fb")
+AZURE_AD_TENANT_ID = os.getenv("AZURE_AD_TENANT_ID")
+AZURE_AD_CLIENT_ID = os.getenv("AZURE_AD_CLIENT_ID")
 AZURE_AD_ISSUER = f"https://login.microsoftonline.com/{AZURE_AD_TENANT_ID}/v2.0"
 AZURE_AD_JWKS_URL = f"{AZURE_AD_ISSUER}/discovery/v2.0/keys"
+
+ASGI_APPLICATION = 'core.asgi.application'
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    },
+}
+

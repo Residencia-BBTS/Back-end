@@ -2,6 +2,8 @@ from ninja import Router
 from datetime import datetime, timedelta, timezone
 from .models import Tickets
 from .schema import TicketSchema
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 from core.auth import azure_bearer
 
 router = Router()
@@ -33,6 +35,8 @@ def get_tickets(request, order: str = "recent", status: str = None, severity: st
 
 @router.post("/new_incidents")
 def new_incidents(request, tickets: list[dict]):
+    channel_layer = get_channel_layer()
+
     for ticket in tickets:
         try:
             ticket_data = {
@@ -78,6 +82,19 @@ def new_incidents(request, tickets: list[dict]):
                 ticket_obj.save(update_fields=["lastModifiedTime", "status", "severity", "assignedTo", "email", "title", "description", "incidentURL", "providerName"])
 
             print("Objeto criado ou atualizado:", ticket_obj)
+
+            async_to_sync(channel_layer.group_send)(
+                "tickets_group",  
+                {
+                    "type": "ticket_update",
+                    "ticket": {
+                        "uuid": ticket_obj.uuid,
+                        "title": ticket_obj.title,
+                        "assignedTo": ticket_obj.assignedTo,
+                        "providerName": ticket_obj.providerName
+                    }
+                }
+            )
 
         except Exception as e:
             print(f"Erro ao processar o ticket {ticket_schema.uuid}: {e}")
