@@ -1,4 +1,12 @@
-## 1. Clonar o Repositório
+<img src="https://github.com/user-attachments/assets/c6fb3686-082b-49fd-87cd-e5f737add6b6" alt="image" width="350" height="200">
+
+# BBTS - Sistema de Gerenciamento de Tickets
+
+Projeto que consistiu no desenvolvimento de um sistema integrado de gerenciamento de tickets, projetado para centralizar, em uma única plataforma, dados provenientes de diversos sistemas de help desk. A solução foi criada com o objetivo de unificar informações, facilitando o acompanhamento e a gestão eficiente de demandas. 
+
+## Etapas para rodar o projeto:
+
+### 1. Clonar o Repositório
 
 Clone o repositório do projeto para o seu ambiente local:
 
@@ -6,7 +14,7 @@ Clone o repositório do projeto para o seu ambiente local:
 git clone <URL_DO_REPOSITORIO>
 ```
 
-## 2. Instalar as Dependências
+### 2. Instalar as Dependências
 
 Instale as dependências do projeto listadas no arquivo requirements.txt:
 
@@ -14,16 +22,7 @@ Instale as dependências do projeto listadas no arquivo requirements.txt:
 pip install -r requirements.txt
 ```
 
-## 3. Configurar as Credenciais
-
-Crie um arquivo .env na raiz do projeto e adicione as credenciais que foram enviadas no grupo:
-
-```bash
-USER_ACESS = xxx
-PASSWORD = xxx
-```
-
-## 4. Rodar o Servidor
+### 3. Rodar o Servidor
 
 Utilize python manage.py runserver para rodar o servidor:
 
